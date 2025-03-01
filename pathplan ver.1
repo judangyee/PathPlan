@@ -1,0 +1,71 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def generate_track(track_length=20, track_width=2, spacing=1):
+    """트랙 길이, 폭, 라바콘 간격을 설정하여 라바콘 위치를 생성"""
+    num_cones = track_length // spacing + 1
+    cone_x = np.linspace(0, track_length, num_cones)
+    cone_y_left = np.full(num_cones, track_width)
+    cone_y_right = np.full(num_cones, -track_width)
+    return cone_x, cone_y_left, cone_y_right
+
+
+def generate_rectangles(cone_x, cone_y_left, cone_y_right):
+    """라바콘을 기반으로 사각형을 생성하고 중심 좌표를 계산"""
+    num_cones = len(cone_x)
+    rectangles = []
+    centers = []
+
+    for i in range(num_cones - 1):
+        p1 = np.array([cone_x[i], cone_y_left[i]])
+        p2 = np.array([cone_x[i + 1], cone_y_left[i + 1]])
+        p3 = np.array([cone_x[i], cone_y_right[i]])
+        p4 = np.array([cone_x[i + 1], cone_y_right[i + 1]])
+
+        rectangles.append([p1, p2, p4, p3, p1])
+        center_x = np.mean([p1[0], p2[0], p3[0], p4[0]])
+        center_y = np.mean([p1[1], p2[1], p3[1], p4[1]])
+        centers.append([center_x, center_y])
+
+    return rectangles, centers
+
+
+def plot_track(cone_x, cone_y_left, cone_y_right, rectangles, centers):
+    """트랙과 생성된 사각형, 중심 경로를 시각화"""
+    plt.figure(figsize=(10, 5))
+
+    # 라바콘 표시
+    plt.scatter(cone_x, cone_y_left, color='r', label="Left Cones", zorder=3)
+    plt.scatter(cone_x, cone_y_right, color='b', label="Right Cones", zorder=3)
+
+    # 라바콘 사이 연결
+    for i in range(len(cone_x) - 1):
+        plt.plot([cone_x[i], cone_x[i + 1]], [cone_y_left[i], cone_y_left[i + 1]], 'k-', alpha=0.5, zorder=2)
+        plt.plot([cone_x[i], cone_x[i + 1]], [cone_y_right[i], cone_y_right[i + 1]], 'k-', alpha=0.5, zorder=2)
+
+    # 사각형 표시
+    for rect in rectangles:
+        rect_x, rect_y = zip(*rect)
+        plt.plot(rect_x, rect_y, 'gray', linestyle='-', linewidth=1, alpha=0.5, zorder=1)
+
+    # 중심점 표시 및 연결
+    center_x, center_y = zip(*centers)
+    plt.scatter(center_x, center_y, color='g', label="Centers", zorder=4, s=10)
+    for i in range(len(centers) - 1):
+        x1, y1 = centers[i]
+        x2, y2 = centers[i + 1]
+        plt.plot([x1, x2], [y1, y2], 'g-', zorder=5)
+
+    plt.legend()
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.title("Track with Virtual Quadrilaterals and Centers")
+    plt.axis("equal")
+    plt.show()
+
+
+# 실행 코드
+cone_x, cone_y_left, cone_y_right = generate_track()
+rectangles, centers = generate_rectangles(cone_x, cone_y_left, cone_y_right)
+plot_track(cone_x, cone_y_left, cone_y_right, rectangles, centers)
