@@ -18,6 +18,8 @@ class VehicleEnvSimple:
         self.goal = goal
         self.dt = dt; self.L = L
         self.v_max = v_max; self.phi_max = phi_max
+        self.sdim = 7
+        self.adim = 2
         self.reset()
 
     def reset(self):
@@ -290,7 +292,18 @@ def eval_path(agent, env, max_steps=500):
 if __name__ == "__main__":
     grid, start, goal = create_map(width=36, height=22, obstacle_ratio=0.10)
     # show_map(grid, start, goal)
-    agent, env, rewards = train_simple(grid, start, goal, episodes=1000000, init_steps=1500, batch=256, device='cpu')
+    agent, env, rewards = train_simple(grid, start, goal, episodes=100, init_steps=1500, batch=256, device='cpu')
+
+    # 모델 저장
+    torch.save({
+        'policy': agent.policy.state_dict(),
+        'q1': agent.q1.state_dict(),
+        'q2': agent.q2.state_dict(),
+        'alpha': agent.alpha
+    }, "sac_model.pth")
+
+    print("모델 저장 완료: sac_model.pth")
+
     plt.plot(rewards); plt.title("Rewards"); plt.show()
     path = eval_path(agent, env)
     env.render_path(path, title="Simplified SAC Path")
